@@ -1,0 +1,31 @@
+.spriteMe(@x, @y) {
+  background: url('../img/icon.png');
+  background-position: -@x * 64px -@y * 64px;
+  background-repeat: no-repeat;
+  width: 32px;
+  height: 32px;
+}
+
+.icon-head {
+  margin: 8px 0px;
+}
+
+.icon-text {
+  .spriteMe(3, 15);
+}
+
+.icon-resize {
+  .spriteMe(1, 17);
+}
+
+.icon-play {
+  .spriteMe(9, 12);
+}
+
+.icon-close {
+  cursor: pointer;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  .spriteMe(2, 19);
+}
