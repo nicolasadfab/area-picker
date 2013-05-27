@@ -140,11 +140,13 @@ var AreaPicker = AreaPicker || (function ($)
             
             addSelection: function (e)
             {
+                $('#iframe-overlay').show();
                 var s = new Selection($('#iframe-wrapper'));
             },
             
             closePopin: function (e)
             {
+                $('#popin-overlay').hide();
                 $('#popin-wrapper').hide();
             },
             
@@ -173,6 +175,7 @@ var AreaPicker = AreaPicker || (function ($)
                 
                 $('textarea', '#popin-wrapper').val(c);
                 
+                $('#popin-overlay').show();
                 $('#popin-wrapper').show();
             }
         },
@@ -203,6 +206,12 @@ var AreaPicker = AreaPicker || (function ($)
                            }
                         }
                     });
+                }
+            });
+            
+            $('#iframe-url').bind('keyup', function(e) {
+                if (e.which === 13) {
+                    $('.icon-play').click();
                 }
             });
         },
