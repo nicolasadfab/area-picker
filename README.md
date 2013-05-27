@@ -11,7 +11,7 @@ Example of JSON format
 
 ```json
 {
-	"url":"http://localhost/area-picker/index.html",
+	"url":"http://adfab.fr",
 	"area":
 	{
 		"width":122,
