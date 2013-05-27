@@ -155,7 +155,7 @@ var AreaPicker = AreaPicker || (function ($)
                 var c = '{',
                     cpt = 0;
                     
-                c += '\n\t"url":"' + top.location.href + '",';
+                c += '\n\t"url":"' + $('iframe', '#iframe-wrapper').attr('src') + '",';
                 
                 $('.ruler-area').each(function (index, val) {
                     if(cpt > 0) {
