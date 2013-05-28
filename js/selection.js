@@ -1,8 +1,10 @@
-function Selection ( parent )
+function Selection ( parent, area, callback )
 {
     'use strict';
     
     this.parent = parent;
+    this.area = area;
+    this.callback = callback;
     
     this.rx = $('<div />')
         .addClass('ruler-x')
@@ -22,12 +24,30 @@ function Selection ( parent )
         .addClass('ruler-area')
         .hide();
     
+    if(this.parent.css('position') === 'static') {
+        this.parent.css('position', 'relative');
+    }
+        
+    this.overlay = $('<div />')
+        .addClass('ruler-overlay')
+        .css({
+            position: 'absolute',
+            top: (this.area.offset().top - this.parent.offset().top) + 'px',
+            left: (this.area.offset().left - this.parent.offset().left) + 'px',
+            width: this.area.width() + 'px',
+            height: this.area.height() + 'px',
+            overflow: 'hidden'
+        });
+    
     this.parent
+        .append(this.overlay);
+        
+    this.overlay
         .append(this.rx)
         .append(this.ry)
         .append(this.ryInfo)
         .append(this.rxInfo)
-        .append(this.ele);
+        .append(this.ele)
     
     this.bindEvents();
 }
@@ -39,14 +59,12 @@ Selection.prototype.bindEvents = function ()
     var self = this,
         px, py, rulerVisible = false;
     
-    this.parent.bind('mousemove', function (e)
+    this.overlay.bind('mousemove', function (e)
     {
         e.preventDefault();
         
-        px = $('#iframe-wrapper').scrollLeft() + e.clientX
-                - parseInt(self.parent.css('left').replace(/px/g, ''), 10);
-        py = $('#iframe-wrapper').scrollTop() + e.clientY
-                - parseInt(self.parent.css('top').replace(/px/g, ''), 10);
+        px = e.clientX - (self.overlay.offset().left);
+        py = e.clientY - (self.overlay.offset().top);
         
         self.ryInfo
             .css({
@@ -81,14 +99,12 @@ Selection.prototype.bindEvents = function ()
         return false;
     });
     
-    this.parent.bind('mousedown', function (e)
+    this.overlay.bind('mousedown', function (e)
     {
         e.preventDefault();
         
-        px = $('#iframe-wrapper').scrollLeft() + e.clientX
-                - parseInt(self.parent.css('left').replace(/px/g, ''), 10);
-        py = $('#iframe-wrapper').scrollTop() + e.clientY
-                - parseInt(self.parent.css('top').replace(/px/g, ''), 10);
+        px = e.clientX - (self.overlay.offset().left);
+        py = e.clientY - (self.overlay.offset().top);
         
         self.ele.show()
             .css({
@@ -101,13 +117,13 @@ Selection.prototype.bindEvents = function ()
         return false;
     });
     
-    this.parent.bind('mouseup', function (e)
+    this.overlay.bind('mouseup', function (e)
     {
         e.preventDefault();
         
-        self.parent.unbind('mousedown');
-        self.parent.unbind('mousemove');
-        self.parent.unbind('mouseup');
+        self.overlay.unbind('mousedown');
+        self.overlay.unbind('mousemove');
+        self.overlay.unbind('mouseup');
         
         self.complete();
         
@@ -134,14 +150,23 @@ Selection.prototype.complete = function ()
         .attr('data-height', this.ele.height())
         .attr('data-top', this.ele.css('top').replace(/px/g, ''))
         .attr('data-left', this.ele.css('left').replace(/px/g, ''));
+        
+    if(typeof this.callback !== 'undefined') {
+        this.callback({
+            width: this.ele.width(),
+            height: this.ele.height(),
+            y: parseInt(this.ele.css('top').replace(/px/g, ''), 10),
+            x: parseInt(this.ele.css('left').replace(/px/g, ''), 10)
+        });
+    }
 };
 
 Selection.prototype.destroy = function ()
 {
     'use strict';
     
-    this.parent.unbind('mousedown');
-    this.parent.unbind('mousemove');
-    this.parent.unbind('mouseup');
+    this.overlay.unbind('mousedown');
+    this.overlay.unbind('mousemove');
+    this.overlay.unbind('mouseup');
     this.ele.remove();
 };

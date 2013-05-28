@@ -1,269 +1,262 @@
-var AreaPicker = AreaPicker || (function ($)
-{
-    var Utils   = {}, // Your Toolbox  
-        Ajax    = {}, // Your Ajax Wrapper
-        Events  = {}, // Event-based Actions      
-        Routes  = {}, // Your Page Specific Logic   
-        App     = {}, // Your Global Logic and Initializer
-        Public  = {}; // Your Public Functions
-
-    Utils = {
-        settings: {
-            debug: true,
-            meta: {},
-            init: function ()
+var AreaPicker = {
+    exdm: null,
+    step: 0,
+    selected: null,
+    result: {
+        area: {}
+    },
+    
+    init: function ()
+    {
+        'use strict';
+        
+        AreaPicker.bindEvents();
+    },
+    
+    bindEvents: function ()
+    {
+        'use strict';
+        
+        $('#start-btn').bind('click', function ()
+        {
+            AreaPicker.nextStep();
+            $('#popin-wrapper').hide();
+            var local = {
+                    // fallback swf
+                    swf: '../easyxdm/easyxdm.swf',
+                    //remote file
+                    remote: $('#iframe-xdm').val(),
+                    //
+                    container: document.getElementById("iframe-wrapper"),
+                    width: '100%',
+                    //container
+                    onReady: AreaPicker.easyXDMReady
+            },
+            remote = {
+                    // existing remote service that can be called
+                    remote: {
+                        embed: {},
+                        bindEvents: {},
+                        getUrl: {},
+                        addStyle: {}
+                    },
+                    // local service that can be called
+                    local: {
+                        events: AreaPicker.getEvents
+                    }
+                };
+            
+            AreaPicker.exdm = new easyXDM.Rpc(local, remote);
+        });
+        
+        $('#next-step').bind('click', function (e)
+        {
+            e.preventDefault();
+            switch(AreaPicker.step) {
+                case 0 :
+                    break;
+                case 1 :
+                    AreaPicker.nextStep();
+                    AreaPicker.addStyle();
+                    break;
+                case 2 :
+                    if(AreaPicker.selected !== null) {
+                        AreaPicker.nextStep();
+                        AreaPicker.showElement();
+                    }
+                    break;
+                case 3 :
+                    AreaPicker.nextStep();
+                    AreaPicker.showResult();
+                    break;
+            }
+            
+            return false;
+        });
+        
+        $('#prev-step').bind('click', function (e)
+        {
+            e.preventDefault();
+            switch(AreaPicker.step) {
+                case 2 :
+                    AreaPicker.prevStep();
+                    AreaPicker.addStyle();
+                    break;
+                case 3 :
+                    AreaPicker.prevStep();
+                    $('#tip1').hide();
+                    $('#tip3').hide();
+                    $('#tip2').hide();
+                    
+                    $('iframe', '#iframe-wrapper').show();
+                    $('#popin-wrapper').hide();
+                    break;
+                default :
+                    break;
+            }
+            
+            return false;
+        });
+    },
+    
+    showResult: function ()
+    {
+        AreaPicker.exdm.getUrl(
+            {},
+            function (rpcdata)
             {
-                $('meta[name^="app-"]').each(function(){
-                    Utils.settings.meta[ this.name.replace('app-','') ] = this.content;
-                });
-            }
-        },
-        
-        cache: {
-            window: window,
-            document: document
-        },
-        
-        home_url: function (path)
-        {
-            if(typeof path==="undefined"){
-                path = '';
-            }
-            return Utils.settings.meta.homeURL+path+'/';            
-        },
-        
-        log: function (what)
-        {
-            if (Utils.settings.debug) {
-                console.log(what);
-            }
-        },
-        
-        parseRoute: function (input)
-        {
-            
-            var delimiter = input.delimiter || '/',
-                paths = input.path.split(delimiter),
-                check = input.target[paths.shift()],
-                exists = typeof check !== 'undefined',
-                isLast = paths.length === 0;
+                AreaPicker.result.url = rpcdata;
                 
-            input.inits = input.inits || [];
-            
-            if (exists) {
-                if(typeof check.init === 'function') {
-                    input.inits.push(check.init);
-                }
-                if (isLast) {
-                    input.parsed.call(undefined, {
-                        exists: true,
-                        type: typeof check,
-                        obj: check,
-                        inits: input.inits
-                    });
-                } else {
-                    Utils.parseRoute({
-                        path: paths.join(delimiter), 
-                        target: check,
-                        delimiter: delimiter,
-                        parsed: input.parsed,
-                        inits: input.inits
-                    });
-                }
-            } else {
-                input.parsed.call(undefined, {
-                    exists: false
-                });
+                console.log(AreaPicker.result);
             }
-        },
+        );
+    },
+    
+    showElement: function ()
+    {
+        var newEle = '';
         
-        route: function ()
+        $('#tip1').hide();
+        $('#tip2').show();
+        $('#tip3').hide();
+        
+        $('iframe', '#iframe-wrapper').hide();
+        $('#popin-wrapper').show();
+        
+        switch(AreaPicker.selected.type) {
+            case 'IMG':
+                newEle = '<img src="' + AreaPicker.selected.content.src
+                    + '" width="' + AreaPicker.selected.content.width
+                        + '" height="' + AreaPicker.selected.content.height + '" />';
+                
+                $('.dyna-content', '#tip2').html(newEle);
+                AreaPicker.bindImgSelect();
+                break;
+            default:
+                newEle = '<' + AreaPicker.selected.type.toLowerCase() + '>';
+                newEle += AreaPicker.selected.content.src;
+                newEle += '</' + AreaPicker.selected.type.toLowerCase() + '>';
+                
+                $('.dyna-content', '#tip2').html(newEle);
+                AreaPicker.bindTextSelect();
+                break;
+        }
+    },
+    
+    bindImgSelect: function ()
+    {
+        new Selection(
+            $('.dyna-content', '#tip2'),
+            $('.dyna-content img', '#tip2'),
+            function (area)
+            {
+                var img = $('<img />'),
+                    wrapper = $('<div />');
+                    
+                img.attr('src', $('.dyna-content img', '#tip2').attr('src'));
+                
+                img.css({
+                        position: 'absolute',
+                        top: '-' + area.y + 'px',
+                        left: '-' + area.x + 'px'
+                    });
+                    
+                wrapper.css({
+                        position: 'relative',
+                        width: area.width,
+                        height: area.height,
+                        overflow: 'hidden'
+                    })
+                    .append(img);
+                
+                AreaPicker.result.area.width = area.width;
+                AreaPicker.result.area.height = area.height;
+                $('.result-content', '#tip2').html(wrapper);
+            }
+        );
+    },
+    
+    bindTextSelect: function ()
+    {
+        $('#tip2').bind('mouseup', function (e)
         {
-            var i;
-            
-            Utils.parseRoute({
-                path: Utils.settings.meta.route,
-                target: Routes,
-                delimiter: '/',
-                parsed: function (res)
+            $('.result-content', '#tip2').html(window.getSelection().toString());
+        });
+    },
+    
+    addStyle: function ()
+    {
+        AreaPicker.exdm.addStyle(
+            {
+                css: '.playground-selected { border: 1px solid red; }'
+                        + '* { cursor: crosshair !important; }'
+            },
+            function (rpcdata)
+            {
+                
+            }
+        );
+        
+        AreaPicker.exdm.bindEvents(
+            {
+                "events": 
                 {
-                    if(res.exists && res.type=='function'){
-                        if(res.inits.length!=0){
-                            for(i in res.inits){
-                                res.inits[i].call();
-                            }
-                        }
-                        res.obj.call();
+                    document: {
+                        'evt': 'click',
+                        'callback': 'clicked'
                     }
                 }
-            });
-            
-        } 
-    };
-    var _log = Utils.log;
-    
-    Ajax = {
-        ajaxUrl: Utils.home_url('ajax'),
-        send: function (type, method, data, returnFunc)
-        {
-            $.ajax({
-                type:'POST',
-                url: Ajax.ajaxUrl+method,
-                dataType:'json',
-                data: data,
-                success: returnFunc
-            });
-        },
-        
-        call: function (method, data, returnFunc)
-        {
-            Ajax.send('POST', method, data, returnFunc);
-        },
-        
-        get: function (method, data, returnFunc)
-        {
-            Ajax.send('GET', method, data, returnFunc);
-        }
-    };
-
-    Events = {
-        endpoints: {
-            
-            loadIframe: function (e)
-            {
-                if($('.ruler-area').size() > 0) {
-                    $('.ruler-area').remove();
-                }
-                $('#popin-wrapper').hide();
-                App.createIframe($('#iframe-url').val());
             },
             
-            addSelection: function (e)
+            function (rpcdata)
             {
-                $('#iframe-overlay').show();
-                var s = new Selection($('#iframe-wrapper'));
-            },
-            
-            closePopin: function (e)
-            {
-                $('#popin-overlay').hide();
-                $('#popin-wrapper').hide();
-            },
-            
-            getCode: function (e)
-            {
-                var c = '{',
-                    cpt = 0;
-                    
-                c += '\n\t"url":"' + $('iframe', '#iframe-wrapper').attr('src') + '",';
                 
-                $('.ruler-area').each(function (index, val) {
-                    if(cpt > 0) {
-                        c += ',';
-                    }
-                    c += '\n\t"area":\n';
-                    c += '\t{\n';
-                    c += '\t\t"width":' + $(this).attr('data-width') + ',\n';
-                    c += '\t\t"height":' + $(this).attr('data-height') + ',\n';
-                    c += '\t\t"x":' + $(this).attr('data-left') + ',\n';
-                    c += '\t\t"y":' + $(this).attr('data-top') + '\n';
-                    c += '\t}';
-                    
-                    cpt++;
-                });
-                c += '\n}\n';
-                
-                $('textarea', '#popin-wrapper').val(c);
-                
-                $('#popin-overlay').show();
-                $('#popin-wrapper').show();
             }
-        },
+        );
+    },
+    
+    easyXDMReady: function (e)
+    {
+        'use strict';
+
+        $('iframe', '#iframe-wrapper')
+            .height('100%')
+            .width('100%')
+            .css({
+                padding: '0px',
+                margin: '0px'
+            });
         
-        bindEvents: function ()
-        {
-            
-            $('[data-event]').each(function ()
+        AreaPicker.exdm.embed(
             {
-                var _this = this,
-                    method = _this.dataset.method || 'click',
-                    name = _this.dataset.event,
-                    bound = _this.dataset.bound;
+                "url": $('#iframe-url').val()
+            },
+            function (rpcdata)
+            {
                 
-                if(!bound){
-                    Utils.parseRoute({
-                        path: name,
-                        target: Events.endpoints,
-                        delimiter: '.',
-                        parsed: function (res)
-                        {
-                            if(res.exists){
-                                _this.dataset.bound = true;
-                                $(_this).on(method, function (e)
-                                { 
-                                    res.obj.call(_this, e);
-                                });
-                           }
-                        }
-                    });
-                }
-            });
-            
-            $('#iframe-url').bind('keyup', function(e) {
-                if (e.which === 13) {
-                    $('.icon-play').click();
-                }
-            });
-        },
-        
-        init: function ()
-        {
-            Events.bindEvents();
-        }
-    };
-    
-    Routes = {};
-    
-    App = {
-        logic: {},
-        
-        createIframe: function (url)
-        {
-            if($('iframe', '#iframe-wrapper').size() > 0) {
-                $('iframe', '#iframe-wrapper').remove();
             }
-            var i = document.createElement('iframe');
-            i.setAttribute('src', url);
-            i.style.width = '100%';
-            i.style.height = '4000px';
-            i.style.border = '0px';
-            i.style.frameborder = '0px';
-            
-            $('#iframe-overlay').width($(window).width() - 5);
-            
-            i.addEventListener('load', function ()
-            {
-                $('#iframe-overlay').height($('iframe', '#iframe-wrapper').height());
-                $('#iframe-wrapper').height($(window).height() - $('header').height() - 5);
-            });
-            document.getElementById('iframe-wrapper').appendChild(i);
-            
-        },
-        
-        init: function ()
-        {
-            Utils.settings.init();
-            Events.init();
-            //Utils.route();
-        }
-    };
+        );
+    },
     
-    Public = {
-        init: App.init  
-    };
+    nextStep: function ()
+    {
+        AreaPicker.step++;
+    },
+    
+    prevStep: function ()
+    {
+        AreaPicker.step = ((AreaPicker.step-1) > 0) ? (AreaPicker.step-1) : AreaPicker.step;
+    },
+    
+    getEvents: function (e)
+    {
+        'use strict';
+        
+        AreaPicker.selected = JSON.parse(e);
+        AreaPicker.result.area.y = AreaPicker.selected.clientY;
+        AreaPicker.result.area.x = AreaPicker.selected.clientX;
+        return;
+    }
+};
 
-    return Public;
-
-})(window.jQuery);
-
-jQuery(document).ready(AreaPicker.init);
+$(document).ready(AreaPicker.init);
