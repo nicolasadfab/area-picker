@@ -17,43 +17,40 @@ var AreaPicker = {
     {
         'use strict';
         
-        $('#start-btn').bind('click', function ()
-        {
-            AreaPicker.nextStep();
-            $('#popin-wrapper').hide();
-            var local = {
-                    // fallback swf
-                    swf: '../easyxdm/easyxdm.swf',
-                    //remote file
-                    remote: $('#iframe-xdm').val(),
-                    //
-                    container: document.getElementById("iframe-wrapper"),
-                    width: '100%',
-                    //container
-                    onReady: AreaPicker.easyXDMReady
-            },
-            remote = {
-                    // existing remote service that can be called
-                    remote: {
-                        embed: {},
-                        bindEvents: {},
-                        getUrl: {},
-                        addStyle: {}
-                    },
-                    // local service that can be called
-                    local: {
-                        events: AreaPicker.getEvents
-                    }
-                };
-            
-            AreaPicker.exdm = new easyXDM.Rpc(local, remote);
-        });
         
         $('#next-step').bind('click', function (e)
         {
             e.preventDefault();
             switch(AreaPicker.step) {
                 case 0 :
+                    AreaPicker.nextStep();
+                    $('#popin-wrapper').hide();
+                    var local = {
+                            // fallback swf
+                            swf: '../easyxdm/easyxdm.swf',
+                            //remote file
+                            remote: $('#iframe-xdm').val(),
+                            //
+                            container: document.getElementById("iframe-wrapper"),
+                            width: '100%',
+                            //container
+                            onReady: AreaPicker.easyXDMReady
+                    },
+                    remote = {
+                            // existing remote service that can be called
+                            remote: {
+                                embed: {},
+                                bindEvents: {},
+                                getUrl: {},
+                                addStyle: {}
+                            },
+                            // local service that can be called
+                            local: {
+                                events: AreaPicker.getEvents
+                            }
+                        };
+                    
+                    AreaPicker.exdm = new easyXDM.Rpc(local, remote);
                     break;
                 case 1 :
                     AreaPicker.nextStep();
@@ -78,6 +75,37 @@ var AreaPicker = {
         {
             e.preventDefault();
             switch(AreaPicker.step) {
+	            case 1 :
+	                AreaPicker.prevStep();
+                    $('#popin-wrapper').hide();
+                    var local = {
+                            // fallback swf
+                            swf: '../easyxdm/easyxdm.swf',
+                            //remote file
+                            remote: $('#iframe-xdm').val(),
+                            //
+                            container: document.getElementById("iframe-wrapper"),
+                            width: '100%',
+                            //container
+                            onReady: AreaPicker.easyXDMReady
+                    },
+                    remote = {
+                            // existing remote service that can be called
+                            remote: {
+                                embed: {},
+                                bindEvents: {},
+                                getUrl: {},
+                                addStyle: {}
+                            },
+                            // local service that can be called
+                            local: {
+                                events: AreaPicker.getEvents
+                            }
+                        };
+                    
+                    AreaPicker.exdm = new easyXDM.Rpc(local, remote);
+                    break;
+	                break;
                 case 2 :
                     AreaPicker.prevStep();
                     AreaPicker.addStyle();
@@ -240,11 +268,15 @@ var AreaPicker = {
     
     nextStep: function ()
     {
+        'use strict';
+
         AreaPicker.step++;
     },
     
     prevStep: function ()
     {
+        'use strict';
+
         AreaPicker.step = ((AreaPicker.step-1) > 0) ? (AreaPicker.step-1) : AreaPicker.step;
     },
     
