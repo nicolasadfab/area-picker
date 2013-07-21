@@ -17,10 +17,10 @@ var AreaPicker = {
     {
         'use strict';
         
-        
         $('#next-step').bind('click', function (e)
         {
             e.preventDefault();
+            
             switch(AreaPicker.step) {
                 case 0 :
                     AreaPicker.nextStep();
@@ -53,18 +53,16 @@ var AreaPicker = {
                     AreaPicker.exdm = new easyXDM.Rpc(local, remote);
                     break;
                 case 1 :
-                    AreaPicker.nextStep();
-                    AreaPicker.addStyle();
-                    break;
-                case 2 :
                     if(AreaPicker.selected !== null) {
                         AreaPicker.nextStep();
                         AreaPicker.showElement();
                     }
                     break;
-                case 3 :
+                case 2 :
                     AreaPicker.nextStep();
                     AreaPicker.showResult();
+                    break;
+                default :
                     break;
             }
             
@@ -74,8 +72,9 @@ var AreaPicker = {
         $('#prev-step').bind('click', function (e)
         {
             e.preventDefault();
+            
             switch(AreaPicker.step) {
-	            case 1 :
+	            case 2 :	            	
 	                AreaPicker.prevStep();
                     $('#popin-wrapper').hide();
                     var local = {
@@ -105,11 +104,6 @@ var AreaPicker = {
                     
                     AreaPicker.exdm = new easyXDM.Rpc(local, remote);
                     break;
-	                break;
-                case 2 :
-                    AreaPicker.prevStep();
-                    AreaPicker.addStyle();
-                    break;
                 case 3 :
                     AreaPicker.prevStep();
                     $('#tip1').hide();
@@ -133,20 +127,82 @@ var AreaPicker = {
             {},
             function (rpcdata)
             {
+                var resultHtml = JSON.stringify(AreaPicker.result);
+                resultHtml = resultHtml.replace(/,"/g, ',<br />"');
+                resultHtml = resultHtml.replace(/}/g, '<br />}');
+                resultHtml = resultHtml.replace(/{/g, '<br />{<br />');
+
                 AreaPicker.result.url = rpcdata;
                 
-                console.log(AreaPicker.result);
+            	$('#prev-step').hide();
+            	$('#next-step').hide();
+                $('#tip1').hide();
+                $('#tip2').hide();
+                $('#tip3').show();
+                
+                $('#tip3').html(resultHtml);
+
+            	if(typeof AreaConfig.urlToSendResult === "string") {
+            		AreaPicker.sendResult();
+            	}
             }
         );
     },
     
+    ajaxRequest: function ()
+    {
+        'use strict';
+        
+		var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
+		
+		if (window.ActiveXObject){ //Test for support for ActiveXObject in IE first (as XMLHttpRequest in IE7 is broken)
+			for (var i=0; i<activexmodes.length; i++) {
+				try {
+					return new ActiveXObject(activexmodes[i])
+				} catch (e) {
+					//suppress error
+				}
+			}
+		}else if (window.XMLHttpRequest) { // if Mozilla, Safari etc
+			return new XMLHttpRequest()
+		}else {
+			return false
+		}
+	},
+	
+	sendResult: function ()
+	{
+        'use strict';
+        
+		var mypostrequest = new AreaPicker.ajaxRequest();
+		
+		mypostrequest.onreadystatechange = function ()
+		{
+			if (mypostrequest.readyState === 4) {
+				if (mypostrequest.status === 200 || window.location.href.indexOf("http") === -1) {
+					document.getElementById("result").innerHTML = mypostrequest.responseText;
+				}else {
+					console.log("An error has occured making the request");
+				}
+			}
+		}
+		mypostrequest.open("POST", AreaConfig.urlToSendResult, true);
+		mypostrequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		mypostrequest.send(JSON.stringify(AreaPicker.result));
+	},
+    
     showElement: function ()
     {
+        'use strict';
+        
         var newEle = '';
         
         $('#tip1').hide();
         $('#tip2').show();
         $('#tip3').hide();
+
+        $('.result-content').html('');
+    	//AreaPicker.result.area = null;
         
         $('iframe', '#iframe-wrapper').hide();
         $('#popin-wrapper').show();
@@ -173,6 +229,10 @@ var AreaPicker = {
     
     bindImgSelect: function ()
     {
+        'use strict';
+        
+        AreaPicker.result.area.text = null;
+        
         new Selection(
             $('.dyna-content', '#tip2'),
             $('.dyna-content img', '#tip2'),
@@ -195,10 +255,15 @@ var AreaPicker = {
                         height: area.height,
                         overflow: 'hidden'
                     })
+                    .addClass('centered')
                     .append(img);
                 
+                console.log(area)
+
                 AreaPicker.result.area.width = area.width;
                 AreaPicker.result.area.height = area.height;
+                AreaPicker.result.area.x = area.x;
+                AreaPicker.result.area.y = area.y;
                 $('.result-content', '#tip2').html(wrapper);
             }
         );
@@ -206,14 +271,22 @@ var AreaPicker = {
     
     bindTextSelect: function ()
     {
-        $('#tip2').bind('mouseup', function (e)
+        'use strict';
+        
+        AreaPicker.result.area.width = null;
+        AreaPicker.result.area.height = null;
+        
+        $('.dyna-content', '#tip2').bind('mouseup', function (e)
         {
             $('.result-content', '#tip2').html(window.getSelection().toString());
+            AreaPicker.result.area.text = window.getSelection().toString();
         });
     },
     
     addStyle: function ()
     {
+        'use strict';
+        
         AreaPicker.exdm.addStyle(
             {
                 css: '.playground-selected { border: 1px solid red; }'
@@ -261,7 +334,7 @@ var AreaPicker = {
             },
             function (rpcdata)
             {
-                
+                AreaPicker.addStyle();
             }
         );
     },
@@ -269,15 +342,17 @@ var AreaPicker = {
     nextStep: function ()
     {
         'use strict';
-
+        
         AreaPicker.step++;
+        console.log('prev-' + AreaPicker.step);
     },
     
     prevStep: function ()
     {
         'use strict';
-
+        
         AreaPicker.step = ((AreaPicker.step-1) > 0) ? (AreaPicker.step-1) : AreaPicker.step;
+        console.log('prev-' + AreaPicker.step);
     },
     
     getEvents: function (e)

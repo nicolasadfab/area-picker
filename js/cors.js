@@ -22,10 +22,10 @@ function getPathTo (element)
     }
 }
 
-function createXPathFromElement(elm) { 
+function createXPathFromElement(elm) {
     var allNodes = document.getElementsByTagName('*'); 
     for (segs = []; elm && elm.nodeType == 1; elm = elm.parentNode) 
-    { 
+    {
         if (elm.hasAttribute('id')) { 
                 var uniqueIdCount = 0,
                     n; 
@@ -45,8 +45,8 @@ function createXPathFromElement(elm) {
             for (i = 1, sib = elm.previousSibling; sib; sib = sib.previousSibling) { 
                 if (sib.localName == elm.localName)  i++; }; 
                 segs.unshift(elm.localName.toLowerCase() + '[' + i + ']'); 
-        }; 
-    }; 
+        };
+    };
     return segs.length ? '/' + segs.join('/') : null; 
 }
 
@@ -119,6 +119,7 @@ function bindEvent (ele, evt, callback)
     ele.addEventListener(evt, function (e)
     {
         e.preventDefault();
+        e.stopPropagation();
         
         var obj = {
                 'callback': callback,
@@ -149,6 +150,47 @@ function bindEvent (ele, evt, callback)
         return false;
     }, true);
 };
+
+/*
+function bindEvent (ele, evt, callback)
+{
+    'use strict';
+    
+    ele.addEventListener(evt, function (e)
+    {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var obj = {
+                'callback': callback,
+                'clientX': e.clientX,
+                'clientY': e.clientY,
+                'className': 'playground-selected',
+                'type': e.target.nodeName,
+                'which': e.which,
+                'content': '',
+                'xpath': getElementXPath('target' in e? e.target : e.srcElement)
+            },
+            old = window.frames[0].document.getElementsByClassName('playground-selected'),
+            i;
+            
+        obj.content = getElementContent(e);
+        
+        if(e.target.className.indexOf('playground-selected') === -1) {
+            for (i in old) {
+                if(typeof old[i] !== 'undefined'
+                    && typeof old[i].className !== 'undefined') {
+                    old[i].className = old[i].className.replace(/playground-selected/g, '');
+                }
+            }
+            e.target.className = ((e.target.className !== '') ? e.target.className + ' ' : '') + 'playground-selected';
+        }
+        remote.events(JSON.stringify(obj));
+        
+        return false;
+    }, true);
+};
+*/
 
 // instantiate a new easyXDM object which will handle the request 
 var url,
