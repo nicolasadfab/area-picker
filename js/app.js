@@ -311,7 +311,6 @@ var AreaPicker = {
             
             function (rpcdata)
             {
-                
             }
         );
     },
@@ -358,10 +357,11 @@ var AreaPicker = {
     getEvents: function (e)
     {
         'use strict';
-        
+
         AreaPicker.selected = JSON.parse(e);
         AreaPicker.result.area.y = AreaPicker.selected.clientY;
         AreaPicker.result.area.x = AreaPicker.selected.clientX;
+        console.log(AreaPicker);
         return;
     }
 };

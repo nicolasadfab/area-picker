@@ -105,9 +105,12 @@ function getElementContent (element)
     
     var r = {
         src: (typeof element.target.src !== 'undefined') ? element.target.src : element.target.innerHTML,
-        width: element.target.style.width,
-        height: element.target.style.height
+        width: element.target.offsetWidth,
+        height: element.target.offsetHeight,
+        offsetX: element.target.offsetParent.offsetLeft,
+        offsetY: element.target.offsetParent.offsetTop
     };
+    console.log(window.frames[0].document.getElementsByClassName('playground-selected'))
     
     return r;
 }
@@ -115,12 +118,12 @@ function getElementContent (element)
 function bindEvent (ele, evt, callback)
 {
     'use strict';
-    
+    console.log(ele)
     ele.addEventListener(evt, function (e)
     {
         e.preventDefault();
         e.stopPropagation();
-        
+
         var obj = {
                 'callback': callback,
                 'clientX': e.clientX,
@@ -133,9 +136,10 @@ function bindEvent (ele, evt, callback)
             },
             old = window.frames[0].document.getElementsByClassName('playground-selected'),
             i;
-            
-        obj.content = getElementContent(e);
         
+        obj.content = getElementContent(e);
+
+        console.log(obj.content)
         if(e.target.className.indexOf('playground-selected') === -1) {
             for (i in old) {
                 if(typeof old[i] !== 'undefined'
