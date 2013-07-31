@@ -21,6 +21,12 @@ var AreaPicker = {
         {
             e.preventDefault();
             
+            var curUrl = $('#iframe-url').val().replace(/http:\/\//, '');
+            if(curUrl.substring(curUrl.length - 1, curUrl.length) == '/') {
+            	curUrl = curUrl.substring(0, curUrl.length - 1);
+            }
+            AreaPicker.result.url = '/' + curUrl.replace(/\//g, '\\/') + '/';
+            
             switch(AreaPicker.step) {
                 case 0 :
                     AreaPicker.nextStep();
@@ -257,8 +263,6 @@ var AreaPicker = {
                     })
                     .addClass('centered')
                     .append(img);
-                
-                console.log(area)
 
                 AreaPicker.result.area.width = area.width;
                 AreaPicker.result.area.height = area.height;
@@ -361,6 +365,7 @@ var AreaPicker = {
         AreaPicker.selected = JSON.parse(e);
         AreaPicker.result.area.y = AreaPicker.selected.clientY;
         AreaPicker.result.area.x = AreaPicker.selected.clientX;
+        AreaPicker.result.xpath = AreaPicker.selected.xpath;
         console.log(AreaPicker);
         return;
     }

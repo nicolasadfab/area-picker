@@ -110,7 +110,6 @@ function getElementContent (element)
         offsetX: element.target.offsetParent.offsetLeft,
         offsetY: element.target.offsetParent.offsetTop
     };
-    console.log(window.frames[0].document.getElementsByClassName('playground-selected'))
     
     return r;
 }
@@ -139,7 +138,6 @@ function bindEvent (ele, evt, callback)
         
         obj.content = getElementContent(e);
 
-        console.log(obj.content)
         if(e.target.className.indexOf('playground-selected') === -1) {
             for (i in old) {
                 if(typeof old[i] !== 'undefined'
