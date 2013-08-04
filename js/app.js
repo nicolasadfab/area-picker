@@ -208,7 +208,6 @@ var AreaPicker = {
         $('#tip3').hide();
 
         $('.result-content').html('');
-    	//AreaPicker.result.area = null;
         
         $('iframe', '#iframe-wrapper').hide();
         $('#popin-wrapper').show();
@@ -276,7 +275,9 @@ var AreaPicker = {
     bindTextSelect: function ()
     {
         'use strict';
-        
+
+        AreaPicker.result.area.x = null;
+        AreaPicker.result.area.y = null;
         AreaPicker.result.area.width = null;
         AreaPicker.result.area.height = null;
         
@@ -347,7 +348,6 @@ var AreaPicker = {
         'use strict';
         
         AreaPicker.step++;
-        console.log('prev-' + AreaPicker.step);
     },
     
     prevStep: function ()
@@ -355,18 +355,16 @@ var AreaPicker = {
         'use strict';
         
         AreaPicker.step = ((AreaPicker.step-1) > 0) ? (AreaPicker.step-1) : AreaPicker.step;
-        console.log('prev-' + AreaPicker.step);
     },
     
     getEvents: function (e)
     {
         'use strict';
-
+        
         AreaPicker.selected = JSON.parse(e);
         AreaPicker.result.area.y = AreaPicker.selected.clientY;
         AreaPicker.result.area.x = AreaPicker.selected.clientX;
-        AreaPicker.result.xpath = AreaPicker.selected.xpath;
-        console.log(AreaPicker);
+        AreaPicker.result.area.xpath = AreaPicker.selected.xpath;
         return;
     }
 };
